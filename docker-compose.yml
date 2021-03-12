@@ -1,0 +1,68 @@
+---
+version: "3.7"
+
+services:
+
+  quagga:
+    container_name: quagga
+    image: registry2.quadra.opendns.com/slvpn/quagga
+    networks:
+      net1:
+        ipv4_address: 169.254.2.200
+      net2:
+        ipv4_address: 169.254.3.200
+    volumes:
+      - "./conf/quagga:/etc/quagga:rw"
+    privileged: true
+    command:
+      /bin/sh -c '
+        mkdir -p /var/log/quagga &&
+        chown -R quagga:quagga /var/log/quagga &&
+        apt-get update &&
+        apt-get install -y net-tools tcpdump &&
+        /usr/local/sbin/zebra --config_file=/etc/quagga/zebra.conf --pid_file=/var/run/quagga/zebra.pid --socket /var/run/quagga/Z.sock -d -k &&
+        /usr/local/sbin/bgpd --config_file=/etc/quagga/quagga.conf --pid_file=/var/run/quagga/quagga.pid --socket /var/run/quagga/Z.sock -d &&
+        tail -f /dev/null
+      '
+
+  exa1:
+    container_name: exa1
+    image: pierky/exabgp
+    networks:
+      net1:
+        ipv4_address: 169.254.2.11
+    volumes:
+      - "./conf/exa1:/etc/exabgp:rw"
+
+  exa2:
+    container_name: exa2
+    image: pierky/exabgp
+    networks:
+      net1:
+        ipv4_address: 169.254.2.12
+      net2:
+        ipv4_address: 169.254.3.12
+    volumes:
+      - "./conf/exa2:/etc/exabgp:rw"
+
+  exa3:
+    container_name: exa3
+    image: pierky/exabgp
+    networks:
+      net2:
+        ipv4_address: 169.254.3.13
+    volumes:
+      - "./conf/exa3:/etc/exabgp:rw"
+
+networks:
+  net1:
+    ipam:
+      driver: default
+      config:
+        - subnet: "169.254.2.0/24"
+
+  net2:
+    ipam:
+      driver: default
+      config:
+        - subnet: "169.254.3.0/24"

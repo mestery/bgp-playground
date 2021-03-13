@@ -5,7 +5,7 @@ services:
 
   quagga:
     container_name: quagga
-    image: registry2.quadra.opendns.com/slvpn/quagga
+    image: pierky/quagga
     networks:
       net1:
         ipv4_address: 169.254.2.200
